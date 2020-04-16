@@ -1,6 +1,6 @@
 
 # Instructions 
-** This document is to help me remember and relearn (and maybe help you learn) how to set-up a self-updating Ghost blog with Docker on a Vultr VPS and then connect it to a Ghost PWA with Netlify.  
+This document is to help me remember and relearn (and maybe help you learn) how to set-up a self-updating Ghost blog with Docker on a Vultr VPS and then connect it to a Ghost PWA (progressive web app) with Netlify. This way folks will be able to edit and publish posts anywhere they have access to the internet, and it will automatically rebuild and publish the static site.
 
 ---
 ### Vultr
@@ -20,6 +20,92 @@ Because I'm just starting out with a small website, and since it's only being us
     sudo systemctl mask ctrl-alt-del.target
     sudo systemctl daemon-reload
     ```
+### Add A User
+1. Create a new a user. Follow the prompts as it will ask you to create a password
+    ```
+    adduser NewUserName
+    ```
+1. Add your user to the sudo group 
+    ```
+    usermod -aG sudo,docker NewUserName
+    ```
+1. Verify your user is in the groups sudo and docker
+    ```
+    groups NewUserName
+    ```
+1. Disconnect from server as root
+    ```
+    exit
+    ```
+1. Login as the new user
+    ```
+    ssh NewUserName@123.456.78.90
+    ```
+### Add Public Key Authentication To The New User
+1. If you haven't already, generate a key on your local computer. Use the default locations and feel free to enter a password for the key or not - either way just don't share the private key kept on your computer with anyone
+    ```
+    ssh keygen -b 4096
+    ```
+1. If you already have a key, then display the public key, select it, and copy it
+    ```
+    cat ~/.ssh/id_rsa.pub
+    ```
+    It will look something like this
+    ```
+    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDBGTO0tsVejssuaYR5R3Y/i73SppJAhme1dH7W2c47d4gOqB4izP0+fRLfvbz/tnXFz4iOP/H6eCV05hqUhF+KYRxt9Y8tVMrpDZR2l75o6+xSbUOMu6xN+uVF0T9XzKcxmzTmnV7Na5up3QM3DoSRYX/EP3utr2+zAqpJIfKPLdA74w7g56oYWI9blpnpzxkEd3edVJOivUkpZ4JoenWManvIaSdMTJXMy3MtlQhva+j9CgguyVbUkdzK9KKEuah+pFZvaugtebsU+bllPTB0nlXGIJk98Ie9ZtxuY3nCKneB+KjKiXrAvXUPCI9mWkYS/1rggpFmu3HbXBnWSUdf localuser@machine.local
+    ```
+1. Back to the server (logged in as NewUserName) create a new folder and set the folder permission
+    ```
+    mkdir ~/.ssh
+    chmod 700 ~/.ssh 
+    ```
+1. Open the following file (if it doesn't exist it will be created when we open it)
+    ```
+    sudo nano ~/.ssh/authorized_keys
+    ```
+1. Paste the public key that you copied, and then type `CTRL-x` and then `y` and then `ENTER` - this will exit out of the nano editor, ask you to save it, and then quit.
+1. You can add more public keys by simply pasting them on a new line
+1. Set the file permission of authorized keys 
+    ```
+    sudo chmod 600 ~/.ssh/authorized_keys
+    ```
+1. Make sure ownership of NewUserName's home folder is set to NewUserName
+    ```
+    chown -R NewUserName:NewUserName /home/NewUserName/
+    ```
+1. Disable password authentication (this should happen after you add your public key, and set all the ownership and folder permission above). Open the SSH configuration file
+    ```
+    sudo nano /etc/ssh/sshd_config
+    ```
+    Find the following lines, uncomment them (delete the #) and make sure these values are set to the following
+    ```
+    PasswordAuthentication  no
+    ChallengeResponseAuthentication  no
+    PubkeyAuthentication  yes
+    ```
+1. Reload SSHD
+    ```
+    systemctl reload sshd
+    ```
+1. Now in another tab in iTerm (or hit command+d) try to ssh into the server using your NewUserName
+    ```
+    ssh NewUserName@123.456.78.90
+    ```
+    If you log in successfully it worked! If not, make sure the folder and file permission and ownership is set correctly. 
+1. Make sure you can log in via your new username before changing this next line; which is to remove root login. So open up the SSH configuration file
+    ```
+    sudo nano /etc/ssh/sshd_config
+    ```
+    Find the following lines, uncomment them (delete the #) and make sure these values are set to the following
+    ```
+    PermitRootLogin no
+    ```
+    Now you will only be able to log in with your NewUserName and on your computer's whose public key you added to the authorized_keys file.
+
+---
+
+### Docker
+
 1. After the server has been updated, check if Docker works. Install and remove the 'Hello World' docker container to make sure everything is working.
     ```
     docker run --rm hello-world
@@ -29,31 +115,83 @@ Because I'm just starting out with a small website, and since it's only being us
   systemctl enable docker 
   ```
 ---
-### Adding A User So We Don't Use Root
-1. Create a new a user. Follow the prompts as it will ask you to create a password)
-    ```
-    adduser UserName
-    ```
-1. Add your user to the sudo group 
-    ```
-    usermod -aG sudo,docker UserName
-    ```
-1. Verify your user is in the groups sudo and docker
-    ```
-    groups UserName
-    ```
-1. Disconnect from server as root
-    ```
-    exit
-    ```
-1. Login as new user
-    ```
-    ssh UserName@123.456.78.90
-    ```
----
 
 
+### Setup NGINX and MYSQL on Ubuntu 18.04
+
+1. Install NGINX
+    ```
+    sudo apt install nginx
+    ```
+1. Check if NGINX was added to UFW (Uncomplicated Firewall) options
+    ```
+    sudo ufw app list
+    ```
+1. Add 'NGINX Full' to 
+    ```
+    sudo ufw allow 'Nginx Full'
+    ```
+1. Check status of UFW 
+    ```
+    sudo ufw status
+    ```
+1. Install MySQL
+    ```
+    sudo apt-get install mysql-server
+    ```
+1. Set a password for the default mysql user
+    1. Open mysql
+        ```
+        sudo mysql
+        ```
+    1. Enter the following line but replace 'password' with your own password, and keep the quote marks, and then hit enter
+        ```
+        ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';
+        ```
+    1. Exit mysql
+        ```
+        quit
+        ```
 ---
+### Install Docker-Compose
+1. Install docker compose ([click here to find the latest version](https://github.com/docker/compose/releases) and replace 1.25.5 with latest version)
+    ```
+    sudo curl -L https://github.com/docker/compose/releases/download/1.25.5/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
+    ```
+1. Change permission for docker-compose
+    ```
+    sudo chmod +x /usr/local/bin/docker-compose
+    ```
+---
+### Install Ghost
+1. Make a Ghost Directory
+    ```
+    mkdir ~/ghost
+    ```
+1. Change directory to the ghost folder you just made
+    ```
+    cd ghost
+    ```
+1. Create docker-compose.yml file (these are the parameters by which docker will create the environment that ghost will run in)
+    ```
+    sudo nano docker-compose.yml
+    ```
+1. Paste in the following in the file you just created
+    ```
+    version: '3'
+    services:
+      ghost:
+        image: ghost
+        restart: always
+        ports:
+          - 2368:2368
+        environment:
+          NODE_ENV: production
+          url: https://ghost.gracelead.org
+        volumes:
+          - /home/ghosty/ghost/content:/var/lib/ghost/content
+
+
 ### Helpful Code Snippets:
 
 1. Lists all containers, even if they aren't running
