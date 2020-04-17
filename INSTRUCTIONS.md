@@ -42,6 +42,7 @@ Because I'm just starting out with a small website, and since it's only being us
     ssh NewUserName@123.456.78.90
     ```
 ### Add Public Key Authentication To The New User
+#### On Your Local Machine
 1. If you haven't already, generate a key on your local computer. Use the default locations and feel free to enter a password for the key or not - either way just don't share the private key kept on your computer with anyone
     ```
     ssh keygen -b 4096
@@ -54,6 +55,7 @@ Because I'm just starting out with a small website, and since it's only being us
     ```
     ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDBGTO0tsVejssuaYR5R3Y/i73SppJAhme1dH7W2c47d4gOqB4izP0+fRLfvbz/tnXFz4iOP/H6eCV05hqUhF+KYRxt9Y8tVMrpDZR2l75o6+xSbUOMu6xN+uVF0T9XzKcxmzTmnV7Na5up3QM3DoSRYX/EP3utr2+zAqpJIfKPLdA74w7g56oYWI9blpnpzxkEd3edVJOivUkpZ4JoenWManvIaSdMTJXMy3MtlQhva+j9CgguyVbUkdzK9KKEuah+pFZvaugtebsU+bllPTB0nlXGIJk98Ie9ZtxuY3nCKneB+KjKiXrAvXUPCI9mWkYS/1rggpFmu3HbXBnWSUdf localuser@machine.local
     ```
+#### On Your Remote Server     
 1. Back to the server (logged in as NewUserName) create a new folder and set the folder permission
     ```
     mkdir ~/.ssh
@@ -79,9 +81,10 @@ Because I'm just starting out with a small website, and since it's only being us
     ```
     Find the following lines, uncomment them (delete the #) and make sure these values are set to the following
     ```
+    PubkeyAuthentication  yes
     PasswordAuthentication  no
     ChallengeResponseAuthentication  no
-    PubkeyAuthentication  yes
+    
     ```
 1. Reload SSHD
     ```
@@ -114,6 +117,7 @@ Because I'm just starting out with a small website, and since it's only being us
   ``` 
   systemctl enable docker 
   ```
+- 
 ---
 
 
@@ -154,13 +158,26 @@ Because I'm just starting out with a small website, and since it's only being us
         ```
 ---
 ### Install Docker-Compose
-1. Install docker compose ([click here to find the latest version](https://github.com/docker/compose/releases) and replace 1.25.5 with latest version)
+1. Install Docker Compose using the line of code below. Use this link for the [Docker Compose GitHub repository](https://github.com/docker/compose/releases) to find the latest version and replace 1.25.5 with latest version number). And here's a link for the official [Docker docs](https://docs.docker.com/compose/install/) to install Docker Compose.
     ```
     sudo curl -L https://github.com/docker/compose/releases/download/1.25.5/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
     ```
-1. Change permission for docker-compose
+1. Change the permission to add executable permissions to docker-compose
     ```
     sudo chmod +x /usr/local/bin/docker-compose
+    ```
+1. Make sure it installed correctly
+    ```
+    docker-compose --version
+    ```
+    If it installed correctly then it should display something like this:
+    ```
+    docker-compose version 1.25.5, build 8a1c60f6
+    ```
+#### If you need to delete Docker Compose
+1. To Uninstall Docker Compose, simply delete the binary
+    ```
+    sudo rm /usr/local/bin/docker-compose
     ```
 ---
 ### Install Ghost
