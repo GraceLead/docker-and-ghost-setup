@@ -20,7 +20,31 @@ Because I'm just starting out with a small website, and since it's only being us
     sudo systemctl mask ctrl-alt-del.target
     sudo systemctl daemon-reload
     ```
-### Add A User
+### Setup Uncomplicated Firewall (UFW)
+1. Check the status of the firewall
+    ```
+    sudo ufw status
+    ```
+1. Reset the firewall, it will disable it, so it's okay to type 'y' when it says `Resetting all rules to installed defaults. This may disrupt existing ssh connections. Proceed with operation (y|n)?`
+    ```
+    sudo ufw reset
+    ```
+1.
+    ```
+    ```
+1.
+    ```
+    ```
+1.
+    ```
+    ```
+1.
+    ```
+    ```
+1.
+
+
+### Add A User To The Server
 1. Create a new a user. Follow the prompts as it will ask you to create a password
     ```
     adduser NewUserName
