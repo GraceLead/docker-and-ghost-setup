@@ -183,7 +183,97 @@ Because I'm just starting out with a small website, and since it's only being us
             ├─627 nginx: master process /usr/sbin/nginx -g daemon on; master_process on;
             └─628 nginx: worker process
     ```
-1. Nginx commands are listed below in Helpful Code Snippets
+1. Set up server blocks for different websites (the -p flag will create any necessary directories)
+    ```
+    sudo mkdir -p /var/www/gracelead.org/html
+    sudo mkdir -p /var/www/grcld.org/html
+    ```
+1. Change ownership to your user, or use the $USER variable:
+
+    sudo chown -R $USER:$USER /var/www/example.com/html
+
+1. The permissions of your web roots should be correct if you haven’t modified your umask value, but you can make sure by typing:
+
+    sudo chmod -R 755 /var/www/example.com
+
+Next, create a sample index.html page using nano or your favorite editor:
+
+    nano /var/www/example.com/html/index.html
+
+Inside, add the following sample HTML:
+/var/www/example.com/html/index.html
+
+<html>
+    <head>
+        <title>Welcome to Example.com!</title>
+    </head>
+    <body>
+        <h1>Success!  The example.com server block is working!</h1>
+    </body>
+</html>
+
+Save and close the file when you are finished.
+
+In order for Nginx to serve this content, it’s necessary to create a server block with the correct directives. Instead of modifying the default configuration file directly, let’s make a new one at /etc/nginx/sites-available/example.com:
+
+    sudo nano /etc/nginx/sites-available/example.com
+
+Paste in the following configuration block, which is similar to the default, but updated for our new directory and domain name:
+/etc/nginx/sites-available/example.com
+
+server {
+        listen 80;
+        listen [::]:80;
+
+        root /var/www/example.com/html;
+        index index.html index.htm index.nginx-debian.html;
+
+        server_name example.com www.example.com;
+
+        location / {
+                try_files $uri $uri/ =404;
+        }
+}
+
+Notice that we’ve updated the root configuration to our new directory, and the server_name to our domain name.
+
+Next, let’s enable the file by creating a link from it to the sites-enabled directory, which Nginx reads from during startup:
+
+    sudo ln -s /etc/nginx/sites-available/example.com /etc/nginx/sites-enabled/
+
+Two server blocks are now enabled and configured to respond to requests based on their listen and server_name directives (you can read more about how Nginx processes these directives here):
+
+    example.com: Will respond to requests for example.com and www.example.com.
+    default: Will respond to any requests on port 80 that do not match the other two blocks.
+
+To avoid a possible hash bucket memory problem that can arise from adding additional server names, it is necessary to adjust a single value in the /etc/nginx/nginx.conf file. Open the file:
+
+    sudo nano /etc/nginx/nginx.conf
+
+Find the server_names_hash_bucket_size directive and remove the # symbol to uncomment the line:
+/etc/nginx/nginx.conf
+
+...
+http {
+    ...
+    server_names_hash_bucket_size 64;
+    ...
+}
+...
+
+Next, test to make sure that there are no syntax errors in any of your Nginx files:
+
+    sudo nginx -t
+
+Save and close the file when you are finished.
+
+If there aren’t any problems, restart Nginx to enable your changes:
+
+    sudo systemctl restart nginx
+
+Nginx should now be serving your domain name. You can test this by navigating to http://example.com, where you should see something like this:
+
+1. Other Nginx commands are listed below in Helpful Code Snippets
 ---
 ### Docker - Make sure it was installed correctly
 1. This will install and then remove the 'Hello World' Docker container.
@@ -217,8 +307,8 @@ Because I'm just starting out with a small website, and since it's only being us
   ``` 
   sudo systemctl enable docker 
   ```
-- 
 ---
+
 
 ---
 ### Install Docker-Compose
