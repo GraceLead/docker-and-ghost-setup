@@ -171,7 +171,7 @@ Because I'm just starting out with a small website, and since it's only being us
     ```
     sudo systemctl status nginx
     ```
-    You should see something like
+    You should see something like this:
     ```
     ● nginx.service - A high performance web server and a reverse proxy server
     Loaded: loaded (/lib/systemd/system/nginx.service; enabled; vendor preset: enabled)
@@ -183,97 +183,105 @@ Because I'm just starting out with a small website, and since it's only being us
             ├─627 nginx: master process /usr/sbin/nginx -g daemon on; master_process on;
             └─628 nginx: worker process
     ```
-1. Set up server blocks for different websites (the -p flag will create any necessary directories)
+    * If you don't see something like above, and instead get an error message like this:
+        ```
+        Job for nginx.service failed because the control process exited with error code.
+        See "systemctl status nginx.service" and "journalctl -xe" for details.
+        ```
+        You most likely forget to add a `;` or added an extra character like `*` somewhere in one of your 'sites-available' configuration file (I know we haven't created those configuration files yet, so come back here to troubleshoot if this happens later). 
+    
+    *  Another way to check to see if there are any errors in your configuration files is to run
+        ```
+        sudo nginx -t
+        ```
+        From the `man nginx` help file, adding the `-t` flag checks the configuration file syntax and then tries to open files referenced in the configuration file.
+    
+    * EXAMPLE: The result after running `sudo nginx -t` will either be an error which points to the file and line number where the error occured: 
+        ```
+        nginx: [emerg] invalid parameter "listen" in /etc/nginx/sites-enabled/grcld.org:3
+        nginx: configuration file /etc/nginx/nginx.conf test failed
+        ```
+        Or it will display that the test was successful:
+        ```
+        nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+        nginx: configuration file /etc/nginx/nginx.conf test is successful
+        ```
+1. Set up server blocks for different websites. We need to create a new folder for each website. Then we create each site's root folder as 'html' within it's parent website folder. Instead of typing out mkdir four separate times, we can use the -p flag to create two folders at once.
     ```
     sudo mkdir -p /var/www/gracelead.org/html
     sudo mkdir -p /var/www/grcld.org/html
     ```
-1. Change ownership to your user, or use the $USER variable:
-
+1. Change the ownership of each server block to your user (or use the $USER variable if you forgot your user name):
+    ```
     sudo chown -R $USER:$USER /var/www/example.com/html
-
-1. The permissions of your web roots should be correct if you haven’t modified your umask value, but you can make sure by typing:
-
+    ```
+1. Change the permission of each server block as well:
+    ```
     sudo chmod -R 755 /var/www/example.com
-
-Next, create a sample index.html page using nano or your favorite editor:
-
-    nano /var/www/example.com/html/index.html
-
-Inside, add the following sample HTML:
-/var/www/example.com/html/index.html
-
-<html>
-    <head>
-        <title>Welcome to Example.com!</title>
-    </head>
-    <body>
-        <h1>Success!  The example.com server block is working!</h1>
-    </body>
-</html>
-
-Save and close the file when you are finished.
-
-In order for Nginx to serve this content, it’s necessary to create a server block with the correct directives. Instead of modifying the default configuration file directly, let’s make a new one at /etc/nginx/sites-available/example.com:
-
+    ```
+1. Next we'll create a sample index.html page for each server block using nano. This allows us later to verify that we can access the server block from a browser
+    ```
+    sudo nano /var/www/example.com/html/index.html
+    ```
+    Inside, add the following sample HTML:
+    ```
+    <html>
+        <head>
+            <title>Welcome to Example.com!</title>
+        </head>
+        <body>
+            <h1>Success!  The example.com server block is working!</h1>
+        </body>
+    </html>
+    ```
+    Then press `CTRL-x` to exit, then when prompted type `y` to save the file, and then press `ENTER` which will then exit you out of the nano editor.
+1. Next we need to create a configuration file for each server block.
+    ```
     sudo nano /etc/nginx/sites-available/example.com
+    ```
+1. Paste in the following configuration block, but replace example.com with your websites
+    ```
+    server {
+            listen 80;
+            listen [::]:80;
 
-Paste in the following configuration block, which is similar to the default, but updated for our new directory and domain name:
-/etc/nginx/sites-available/example.com
+            root /var/www/example.com/html;
+            index index.html index.htm index.nginx-debian.html;
 
-server {
-        listen 80;
-        listen [::]:80;
+            server_name example.com www.example.com;
 
-        root /var/www/example.com/html;
-        index index.html index.htm index.nginx-debian.html;
-
-        server_name example.com www.example.com;
-
-        location / {
-                try_files $uri $uri/ =404;
-        }
-}
-
-Notice that we’ve updated the root configuration to our new directory, and the server_name to our domain name.
-
-Next, let’s enable the file by creating a link from it to the sites-enabled directory, which Nginx reads from during startup:
-
+            location / {
+                    try_files $uri $uri/ =404;
+            }
+    }
+    ```
+    Then press `CTRL-x` to exit, then when prompted, type `y` to save the file, and then press `ENTER` which will exit you out of the nano editor.
+1. Enable the configuration file for each site by creating a symbolic link to the sites-enabled directory
+    ```
     sudo ln -s /etc/nginx/sites-available/example.com /etc/nginx/sites-enabled/
-
-Two server blocks are now enabled and configured to respond to requests based on their listen and server_name directives (you can read more about how Nginx processes these directives here):
-
-    example.com: Will respond to requests for example.com and www.example.com.
-    default: Will respond to any requests on port 80 that do not match the other two blocks.
-
-To avoid a possible hash bucket memory problem that can arise from adding additional server names, it is necessary to adjust a single value in the /etc/nginx/nginx.conf file. Open the file:
-
+    ```
+1. I don't completely understand this part, but to avoid hash bucket memory problems, you need to uncomment the line below in the nginx.conf file. First open the file:
+    ```
     sudo nano /etc/nginx/nginx.conf
-
-Find the server_names_hash_bucket_size directive and remove the # symbol to uncomment the line:
-/etc/nginx/nginx.conf
-
-...
-http {
-    ...
+    ```
+    Then remove the # symbol to uncomment the line:
+    ```
     server_names_hash_bucket_size 64;
-    ...
-}
-...
+    ```
 
-Next, test to make sure that there are no syntax errors in any of your Nginx files:
-
+1. Next, test to make sure that there are no syntax errors in any of your Nginx files:
+    ```
     sudo nginx -t
+    ```
+    Save and close the file when you are finished.
 
-Save and close the file when you are finished.
-
-If there aren’t any problems, restart Nginx to enable your changes:
-
+1. See the troubleshooting section above if you get an error, otherwise restart Nginx:
+    ```
     sudo systemctl restart nginx
+    ```
+1. If you've already pointed your domain name to your server's IP Address, then Nginx should now be directing requests to the specific server block depending on the url that's entered. You can test this! Navigate to http://example.com (*note the http,  https isn't set up yet), and if it works correctly, you should see the index.html file you created above!
 
-Nginx should now be serving your domain name. You can test this by navigating to http://example.com, where you should see something like this:
-
-1. Other Nginx commands are listed below in Helpful Code Snippets
+1. Congrats! Nginx is now set up with multiple server blocks! Feel free to add more if you have additional domain names. Other Nginx commands are listed below in Helpful Code Snippets
 ---
 ### Docker - Make sure it was installed correctly
 1. This will install and then remove the 'Hello World' Docker container.
