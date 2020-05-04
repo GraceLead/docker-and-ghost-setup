@@ -316,7 +316,26 @@ Because I'm just starting out with a small website, and since it's only being us
   sudo systemctl enable docker 
   ```
 ---
+### Install Let's Encrypt with Certbot
 
+1. Add the Certbot PPA to your list of repositories
+    ```
+    sudo add-apt-repository ppa:certbot/certbot
+    sudo apt update
+    ```
+1. Install CertBot 
+    ```
+    sudo apt install certbot python3-certbot-nginx
+    ```
+    Follow the prompts if this is your first time setting up CertBot
+1. Create a certificate for each of your sites
+    ```
+    sudo certbot --nginx -d example.com -d www.example.com
+    ```
+1. Test if the automatic renewal is set up by doing a dry run of the renewal
+    ```
+    sudo certbot renew --dry-run
+    ```
 
 ---
 ### Install Docker-Compose
