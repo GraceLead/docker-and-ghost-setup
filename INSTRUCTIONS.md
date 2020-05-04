@@ -188,14 +188,18 @@ Because I'm just starting out with a small website, and since it's only being us
     sudo mkdir -p /var/www/gracelead.org/html
     sudo mkdir -p /var/www/grcld.org/html
     ```
-1. Change ownership to your user, or use the $USER variable:
-
-    sudo chown -R $USER:$USER /var/www/example.com/html
-
-1. The permissions of your web roots should be correct if you haven’t modified your umask value, but you can make sure by typing:
-
+1. Change ownership of your server blocks to your user (if you forget what your username is you you can just use the $USER variable:
+    ```
+    sudo chown -R $USER:$USER /var/www/gracelead.org/html
+    sudo chown -R $USER:$USER /var/www/grcld.org/html
+    ```
+1. Verify the permissions of your server blocks are correct
+    ```
+    ls -l /var/www/example.com
+    ```
+    ```
     sudo chmod -R 755 /var/www/example.com
-
+    ```
 Next, create a sample index.html page using nano or your favorite editor:
 
     nano /var/www/example.com/html/index.html
