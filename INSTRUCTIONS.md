@@ -1,9 +1,8 @@
-
-# Instructions 
+## Instructions 
 This document is to help me remember and relearn (and maybe help you learn) how to set-up a self-updating Ghost blog with Docker on a Vultr VPS and then connect it to a Ghost PWA (progressive web app) with Netlify. This way folks will be able to edit and publish posts anywhere they have access to the internet, and it will automatically rebuild and publish the static site.
 
 ---
-### Spin up a server - I chose Vultr
+## Spin up a server - I chose Vultr
 Because I'm just starting out with a small website, and since it's only being used as the source for the PWA, I did some research and realized a $5/ month VPS will suffice to run Docker.
 
 1.  Spin up a server by selecting Vultr's application tab, pick Docker, pick Ubuntu 18.04, change server size from $10/month to $5/month, and select other options that you need (backup, ssh keys, etc..).
@@ -21,18 +20,18 @@ Because I'm just starting out with a small website, and since it's only being us
     sudo systemctl daemon-reload
     ```
 ---
-### Add A User To The Server
+## Add A User To The Server
 1. Create a new a user. Follow the prompts as it will ask you to create a password
     ```
-    adduser DinosaurDavid
+    adduser DaveyJones
     ```
 1. Add your user to the sudo group 
     ```
-    usermod -aG sudo,docker DinosaurDavid
+    usermod -aG sudo,docker DaveyJones
     ```
 1. Verify your user is in the groups sudo and docker
     ```
-    groups DinosaurDavid
+    groups DaveyJones
     ```
 1. Disconnect from server as root
     ```
@@ -40,10 +39,10 @@ Because I'm just starting out with a small website, and since it's only being us
     ```
 1. Login as the new user
     ```
-    ssh DinosaurDavid@123.456.78.90
+    ssh DaveyJones@123.456.78.90
     ```
-### Add Public Key Authentication To The New User
-#### On Your Local Machine
+## Add Public Key Authentication To The New User
+### On Your Local Machine
 1. If you don't have an ssh key already, generate a key on your local computer. Use the default locations and feel free to enter a password for the key or not - either way just don't share the private key kept on your computer with anyone
     ```
     ssh keygen -b 4096
@@ -56,8 +55,8 @@ Because I'm just starting out with a small website, and since it's only being us
     ```
     ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDBGTO0tsVejssuaYR5R3Y/i73SppJAhme1dH7W2c47d4gOqB4izP0+fRLfvbz/tnXFz4iOP/H6eCV05hqUhF+KYRxt9Y8tVMrpDZR2l75o6+xSbUOMu6xN+uVF0T9XzKcxmzTmnV7Na5up3QM3DoSRYX/EP3utr2+zAqpJIfKPLdA74w7g56oYWI9blpnpzxkEd3edVJOivUkpZ4JoenWManvIaSdMTJXMy3MtlQhva+j9CgguyVbUkdzK9KKEuah+pFZvaugtebsU+bllPTB0nlXGIJk98Ie9ZtxuY3nCKneB+KjKiXrAvXUPCI9mWkYS/1rggpFmu3HbXBnWSUdf YourComputerUserName@machine.local
     ```
-#### On Your Remote Server     
-1. Back to the server (logged in as DinosaurDavid) create a new folder and set the folder permission
+### On Your Remote Server     
+1. Back to the server (logged in as DaveyJones) create a new folder and set the folder permission
     ```
     mkdir ~/.ssh
     chmod 700 ~/.ssh 
@@ -73,9 +72,9 @@ Because I'm just starting out with a small website, and since it's only being us
     ```
     sudo chmod 600 ~/.ssh/authorized_keys
     ```
-1. Make sure ownership of DinosaurDavid's home folder is set to DinosaurDavid
+1. Make sure ownership of DaveyJones's home folder is set to DaveyJones
     ```
-    chown -R DinosaurDavid:DinosaurDavid /home/DinosaurDavid/
+    chown -R DaveyJones:DaveyJones /home/DaveyJones/
     ```
 1. Disable password authentication (make sure this happens after you add your public key, and set all the ownership and folder permission above). Open the SSH configuration file
     ```
@@ -93,12 +92,12 @@ Because I'm just starting out with a small website, and since it's only being us
     ```
     sudo systemctl reload sshd
     ```
-1. Now in another tab in iTerm (or hit command+d) try to ssh into the server using your new user DinosaurDavid
+1. Now in another tab in iTerm (or hit command+d) try to ssh into the server using your new user DaveyJones
     ```
-    ssh DinosaurDavid@123.456.78.90
+    ssh DaveyJones@123.456.78.90
     ```
     If you can log in successfully, it worked! If not, make sure the permission and ownership is set correctly for the folder and file. 
-1. ### Don't do this next part until you are sure you can log in with your new username!
+1.  !!! Don't do this next part until you are sure you can log in with your new username !!!
  
 1. Remove root login. First, open up the SSH configuration file
     ```
@@ -108,7 +107,7 @@ Because I'm just starting out with a small website, and since it's only being us
     ```
     PermitRootLogin no
     ```
-    Now you will only be able to log in with your DinosaurDavid user and on the computer whose whose public key you added to the authorized_keys file. Good job!
+    Now you will only be able to log in with your DaveyJones user and on the computer whose whose public key you added to the authorized_keys file. Good job!
 ---
 ### Setup NGINX and UFW
 
@@ -283,7 +282,8 @@ Because I'm just starting out with a small website, and since it's only being us
 
 1. Congrats! Nginx is now set up with multiple server blocks! Feel free to add more if you have additional domain names. Other Nginx commands are listed below in Helpful Code Snippets
 ---
-### Docker - Make sure it was installed correctly
+
+## Docker - Make sure it was installed correctly
 1. This will install and then remove the 'Hello World' Docker container.
     ```
     docker run --rm hello-world
@@ -316,7 +316,7 @@ Because I'm just starting out with a small website, and since it's only being us
   sudo systemctl enable docker 
   ```
 ---
-### Install Let's Encrypt with Certbot
+## Install Let's Encrypt with Certbot
 
 1. Add the Certbot PPA to your list of repositories
     ```
@@ -338,7 +338,8 @@ Because I'm just starting out with a small website, and since it's only being us
     ```
 
 ---
-### Install Docker-Compose
+## Install Docker-Compose
+
 1. Install Docker Compose using the line of code below. Use this link for the [Docker Compose GitHub repository](https://github.com/docker/compose/releases) to find the latest version and replace 1.25.5 with latest version number). And here's a link for the official [Docker docs](https://docs.docker.com/compose/install/) to install Docker Compose.
     ```
     sudo curl -L https://github.com/docker/compose/releases/download/1.25.5/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
@@ -364,7 +365,8 @@ Because I'm just starting out with a small website, and since it's only being us
 ### Install Ghost
 1. Make a Ghost Directory
     ```
-    mkdir ~/$USER/ghost
+    cd ~
+    mkdir ghost
     ```
 1. Change directory to the ghost folder you just made
     ```
@@ -376,18 +378,61 @@ Because I'm just starting out with a small website, and since it's only being us
     ```
 1. Paste in the following in the file you just created
     ```
-    version: '3'
+    # docker-compose.yml
+
+    version: '3.8'
+
     services:
-      ghost:
-        image: ghost
+
+        ghost:
+        # We are specifying the Ghost Image to run
+        image: ghost:3-alpine
+
+        # We want the container to restart in case the host gets restarted
         restart: always
+
+        # Map host port 3050 to container port 2368
         ports:
-          - 2368:2368
-        environment:
-          NODE_ENV: production
-          url: https://ghost.gracelead.org
+        - 3050:2368
+
+        # Mount host directory to container directory
         volumes:
-          - /home/ghosty/ghost/content:/var/lib/ghost/content
+        - ~/ghost/data:/var/lib/ghost/content
+
+        # Specify your Ghost blog URL and mail server settings
+        environment:
+            url: https://ghost.gracelead.org
+            #mail__transport: SMTP
+            #mail__options__service: {Your Mail Service}
+            #mail__options__auth__user: {Your User Name}
+            #mail__options__auth__pass: {Your Password} 
+    ```
+1. After you exit editing the docker-compose.yml, make sure you're still in the ghost directory. Next we'll pull the latest docker ghost image
+    ```
+    docker pull
+    ```
+1. 
+
+
+## Make it self a self-updating robot
+
+1. Create an update.sh file and log into it
+    ```
+    cd ~
+    cd ghost
+    sudo nano update.sh
+    ```
+1. Add this to the update.sh file
+    ```
+    #! /bin/sh
+    echo Pulling New Build
+    docker pull
+    echo Stopping Old Build
+    docker-compose down
+    echo Starting New Build
+    docker-compose up -d ghost    
+    ```
+
 
 
 ### Helpful Code Snippets:
