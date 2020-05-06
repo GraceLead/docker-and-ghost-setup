@@ -364,7 +364,7 @@ Because I'm just starting out with a small website, and since it's only being us
 ### Install Ghost
 1. Make a Ghost Directory
     ```
-    mkdir ~/ghost
+    mkdir ~/$USER/ghost
     ```
 1. Change directory to the ghost folder you just made
     ```
@@ -464,4 +464,3 @@ Because I'm just starting out with a small website, and since it's only being us
         ```
         quit
         ```
-
